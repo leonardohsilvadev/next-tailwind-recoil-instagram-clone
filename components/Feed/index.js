@@ -1,4 +1,5 @@
-import { Posts, Stories } from '..'
+import { MiniProfile, Posts, Stories } from '..'
+import Suggestions from '../Suggestions'
 
 export default function Feed() {
   return (
@@ -8,7 +9,12 @@ export default function Feed() {
         <Posts />
       </section>
 
-      <section></section>
+      <section className="hidden xl:inline-grid md:col-span-1">
+        <div className="fixed top-20">
+          <MiniProfile />
+          <Suggestions />
+        </div>
+      </section>
     </main>
   )
 }

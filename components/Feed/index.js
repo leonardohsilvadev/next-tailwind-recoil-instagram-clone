@@ -1,10 +1,11 @@
-import { Stories } from '..'
+import { Posts, Stories } from '..'
 
 export default function Feed() {
   return (
     <main className={styles.container}>
       <section className={styles.storiesSection}>
         <Stories />
+        <Posts />
       </section>
 
       <section></section>

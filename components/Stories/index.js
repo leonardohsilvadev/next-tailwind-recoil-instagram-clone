@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import faker from 'faker'
 import { Story } from '..'
+import { useSession } from 'next-auth/react'
 
 export default function Stories() {
   const [profiles, setProfiles] = useState([])
+  const { data: session } = useSession()
 
   useEffect(() => {
     const fakerUsers = [...Array(20)].map((_, i) => ({
@@ -13,8 +15,6 @@ export default function Stories() {
 
     setProfiles(fakerUsers)
   }, [])
-
-  console.log(profiles)
 
   return (
     <div className={styles.container}>

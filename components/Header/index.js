@@ -9,18 +9,30 @@ import {
 } from '@heroicons/react/outline'
 import { HomeIcon } from '@heroicons/react/solid'
 import { signIn, signOut, useSession } from 'next-auth/react'
+import { useRouter } from 'next/router'
 
 export default function Header() {
   const { data: session } = useSession()
+  const router = useRouter()
 
   return (
     <div className={styles.container}>
       <div className={styles.headerContainer}>
         <div className={styles.largeImg}>
-          <Image src="https://links.papareact.com/ocw" layout="fill" objectFit="contain" />
+          <Image
+            src="https://links.papareact.com/ocw"
+            onClick={() => router.push('/')}
+            layout="fill"
+            objectFit="contain"
+          />
         </div>
         <div className={styles.smallImg}>
-          <Image src="https://links.papareact.com/jjm" layout="fill" objectFit="contain" />
+          <Image
+            src="https://links.papareact.com/jjm"
+            onClick={() => router.push('/')}
+            layout="fill"
+            objectFit="contain"
+          />
         </div>
 
         <div className={styles.middleSection}>
@@ -33,7 +45,7 @@ export default function Header() {
         </div>
 
         <div className={styles.rightSection}>
-          <HomeIcon className="navBtn" />
+          <HomeIcon className="navBtn" onClick={() => router.push('/')} />
           <MenuIcon className={styles.menuIcon} />
 
           {session ? (

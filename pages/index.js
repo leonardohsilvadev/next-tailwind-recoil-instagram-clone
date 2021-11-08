@@ -1,5 +1,5 @@
 import Head from 'next/head'
-import { Feed, Header } from '../components'
+import { Feed, Header, Modal } from '../components'
 
 export default function Home() {
   return (
@@ -8,6 +8,7 @@ export default function Home() {
         <title>Instagram 2.0</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
+      <Modal />
       <Header />
 
       <Feed />

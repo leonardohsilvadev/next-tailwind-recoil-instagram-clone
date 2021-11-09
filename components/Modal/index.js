@@ -1,14 +1,20 @@
+import { Fragment, useRef, useState } from 'react'
+import { useSession } from 'next-auth/react'
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from '@firebase/firestore'
+import { useRecoilState } from 'recoil'
 import { Dialog, Transition } from '@headlessui/react'
 import { CameraIcon } from '@heroicons/react/outline'
-import { Fragment, useRef, useState } from 'react'
-import { useRecoilState } from 'recoil'
 import { modalState } from '../../atoms/modalAtom'
+import { db, storage } from '../../firebase'
+import { ref, getDownloadURL, uploadString } from '@firebase/storage'
 
 export default function Modal() {
-  const [open, setOpen] = useRecoilState(modalState)
   const [selectedFile, setSelectedFile] = useState(null)
+  const [loading, setLoading] = useState(false)
   const filePickerRef = useRef(null)
   const captionRef = useRef(null)
+  const { data: session } = useSession()
+  const [open, setOpen] = useRecoilState(modalState)
 
   const addImageToPost = e => {
     const reader = new FileReader()
@@ -19,6 +25,35 @@ export default function Modal() {
     reader.onload = readerEvent => {
       setSelectedFile(readerEvent.target.result)
     }
+  }
+
+  const uploadPost = async () => {
+    if (loading) return
+
+    setLoading(true)
+
+    const docRef = await addDoc(collection(db, 'posts'), {
+      username: session.user?.username,
+      caption: captionRef.current.value,
+      profileImg: session.user?.image,
+      timestamp: serverTimestamp(),
+    })
+
+    console.log('New doc added with ID: ', docRef.id)
+
+    const imageRef = ref(storage, `posts/${docRef.id}/image`)
+
+    await uploadString(imageRef, selectedFile, 'data_url').then(async snapshot => {
+      const downloadURL = await getDownloadURL(imageRef)
+
+      await updateDoc(doc(db, 'posts', docRef.id), {
+        image: downloadURL,
+      })
+    })
+
+    setOpen(false)
+    setLoading(false)
+    setSelectedFile(null)
   }
 
   return (
@@ -90,8 +125,13 @@ export default function Modal() {
                 </div>
 
                 <div className={styles.uploadBtnContainer}>
-                  <button type="button" className={styles.uploadBtn}>
-                    Upload Post
+                  <button
+                    type="button"
+                    className={styles.uploadBtn}
+                    onClick={uploadPost}
+                    disabled={!selectedFile}
+                  >
+                    {loading ? 'Uploading...' : 'Upload Post'}
                   </button>
                 </div>
               </div>

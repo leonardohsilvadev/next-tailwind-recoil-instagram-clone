@@ -7,37 +7,43 @@ import {
   PaperAirplaneIcon,
 } from '@heroicons/react/outline'
 import { HeartIcon as HeartIconFilled } from '@heroicons/react/solid'
+import { useSession } from 'next-auth/react'
 
-export default function Post({ post: { id, username, avatar, img, caption } }) {
+export default function Post({ post: { id, username, profileImg, image, caption } }) {
+  const { data: session } = useSession()
   return (
     <div className={styles.container}>
       <div className={styles.userInfoSection}>
-        <img className={styles.avatar} src={avatar} alt={`${username} avatar photo`} />
+        <img className={styles.avatar} src={profileImg} alt={`${username} avatar photo`} />
         <p className={styles.username}>{username}</p>
         <DotsHorizontalIcon className={styles.dotsIcon} />
       </div>
 
-      <img className={styles.image} src={img} alt="post image" />
+      <img className={styles.image} src={image} alt="post image" />
 
-      <div className={styles.buttonsSection}>
-        <div className={styles.leftButtonsSection}>
-          <HeartIcon className="btn" />
-          <ChatIcon className="btn" />
-          <PaperAirplaneIcon className="btn" />
+      {session && (
+        <div className={styles.buttonsSection}>
+          <div className={styles.leftButtonsSection}>
+            <HeartIcon className="btn" />
+            <ChatIcon className="btn" />
+            <PaperAirplaneIcon className="btn" />
+          </div>
+
+          <BookmarkIcon className="btn" />
         </div>
-
-        <BookmarkIcon className="btn" />
-      </div>
+      )}
 
       <p className={styles.captionSection}>
         <span className={styles.usernameCaptionSection}>{username} </span> {caption}
       </p>
 
-      <form className={styles.commentSection}>
-        <EmojiHappyIcon className={styles.emojiIcon} />
-        <input type="text" placeholder="Add a comment..." className={styles.commentInput} />
-        <button className={styles.postBtn}>Post</button>
-      </form>
+      {session && (
+        <form className={styles.commentSection}>
+          <EmojiHappyIcon className={styles.emojiIcon} />
+          <input type="text" placeholder="Add a comment..." className={styles.commentInput} />
+          <button className={styles.postBtn}>Post</button>
+        </form>
+      )}
     </div>
   )
 }

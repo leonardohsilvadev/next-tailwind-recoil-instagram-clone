@@ -1,31 +1,20 @@
-import { useState } from 'react'
+import { collection, onSnapshot, orderBy, query } from '@firebase/firestore'
+import { useEffect, useState } from 'react'
 import { Post } from '..'
-
-const mockPosts = [
-  {
-    id: '123',
-    username: 'john.dee',
-    avatar: 'https://avatars.githubusercontent.com/u/46598333?v=4',
-    img: 'https://avatars.githubusercontent.com/u/46598333?v=4',
-    caption: 'This is DOPE!',
-  },
-  {
-    id: '123',
-    username: 'john.dee',
-    avatar: 'https://avatars.githubusercontent.com/u/46598333?v=4',
-    img: 'https://avatars.githubusercontent.com/u/46598333?v=4',
-    caption: 'This is DOPE!',
-  },
-]
+import { db } from '../../firebase'
 
 export default function Posts() {
-  const [posts] = useState(mockPosts)
+  const [posts, setPosts] = useState([])
 
-  return (
-    <div>
-      {posts.map(post => (
-        <Post key={post.id} post={post} />
-      ))}
-    </div>
+  useEffect(
+    () =>
+      onSnapshot(query(collection(db, 'posts'), orderBy('timestamp', 'desc')), snapshot =>
+        setPosts(snapshot.docs)
+      ),
+    [db]
   )
+
+  console.log('posts: ', posts)
+
+  return <div>{posts && posts.map(post => <Post key={post.id} post={post.data()} />)}</div>
 }

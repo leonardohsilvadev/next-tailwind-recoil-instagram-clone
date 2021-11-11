@@ -9,13 +9,25 @@ import {
 } from '@heroicons/react/outline'
 import { HeartIcon as HeartIconFilled } from '@heroicons/react/solid'
 import { useSession } from 'next-auth/react'
-import { addDoc, collection, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore'
+import {
+  addDoc,
+  deleteDoc,
+  setDoc,
+  doc,
+  collection,
+  serverTimestamp,
+  onSnapshot,
+  query,
+  orderBy,
+} from 'firebase/firestore'
 import { db } from '../../firebase'
 import Moment from 'react-moment'
 
 export default function Post({ id, username, profileImg, image, caption }) {
   const [comment, setComment] = useState('')
   const [comments, setComments] = useState([])
+  const [likes, setLikes] = useState([])
+  const [hasLiked, setHasLiked] = useState(false)
   const { data: session } = useSession()
 
   const addComment = async e => {
@@ -32,16 +44,34 @@ export default function Post({ id, username, profileImg, image, caption }) {
     })
   }
 
+  const likePost = async () => {
+    if (hasLiked) {
+      await deleteDoc(doc(db, 'posts', id, 'likes', session.user.uuid))
+    } else {
+      await setDoc(doc(db, 'posts', id, 'likes', session.user.uuid), {
+        username: session.user.username,
+      })
+    }
+  }
+
   useEffect(
     () =>
       onSnapshot(
         query(collection(db, 'posts', id, 'comments'), orderBy('timestamp', 'desc')),
         snapshot => setComments(snapshot.docs)
       ),
-    [db]
+    [db, id]
   )
 
-  console.log('comments: ', comments)
+  useEffect(
+    () => onSnapshot(collection(db, 'posts', id, 'likes'), snapshot => setLikes(snapshot.docs)),
+    [db, id]
+  )
+
+  useEffect(
+    () => setHasLiked(likes.findIndex(like => like.id === session?.user?.uuid) !== -1),
+    [likes]
+  )
 
   return (
     <div className={styles.container}>
@@ -56,7 +86,11 @@ export default function Post({ id, username, profileImg, image, caption }) {
       {session && (
         <div className={styles.buttonsSection}>
           <div className={styles.leftButtonsSection}>
-            <HeartIcon className="btn" />
+            {hasLiked ? (
+              <HeartIconFilled onClick={likePost} className={styles.likedIcon} />
+            ) : (
+              <HeartIcon onClick={likePost} className="btn" />
+            )}
             <ChatIcon className="btn" />
             <PaperAirplaneIcon className="btn" />
           </div>
@@ -66,20 +100,25 @@ export default function Post({ id, username, profileImg, image, caption }) {
       )}
 
       <p className={styles.captionSection}>
+        {likes.length > 0 && <p className={styles.likesText}>{likes.length} likes</p>}
         <span className={styles.usernameCaptionSection}>{username} </span> {caption}
       </p>
 
       {comments.length > 0 && (
-        <div className="ml-10 h-20 overflow-y-scroll scrollbar-thumb-black scrollbar-thin">
+        <div className={styles.commentsContainer}>
           {comments.map(comment => (
-            <div key={comment.id} className="flex items-center space-x-2 mb-3">
-              <img className="h-7 rounded-full" src={comment.data().userImage} alt="" />
-              <p className="text-sm flex-1">
+            <div key={comment.id} className={styles.commentContainer}>
+              <img
+                className={styles.commentUserImage}
+                src={comment.data().userImage}
+                alt="user image from comment"
+              />
+              <p className={styles.commentText}>
                 <span className="font-bold">{comment.data().username}</span>{' '}
                 {comment.data().comment}
               </p>
 
-              <Moment className="pr-5 text-xs" fromNow>
+              <Moment className={styles.commentTimeStampText} fromNow>
                 {comment.data().timestamp?.toDate()}
               </Moment>
             </div>
@@ -126,4 +165,11 @@ const styles = {
   emojiIcon: 'h-7',
   commentInput: 'border-none flex-1 focus:ring-0 outline-none',
   postBtn: 'font-semibold text-blue-400',
+  likedIcon: 'btn text-red-500',
+  likesText: 'font-bold mb-1',
+  commentsContainer: 'ml-10 h-20 overflow-y-scroll scrollbar-thumb-black scrollbar-thin',
+  commentContainer: 'flex items-center space-x-2 mb-3',
+  commentUserImage: 'h-7 rounded-full',
+  commentText: 'text-sm flex-1',
+  commentTimeStampText: 'pr-5 text-xs',
 }

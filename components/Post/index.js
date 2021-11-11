@@ -11,6 +11,7 @@ import { HeartIcon as HeartIconFilled } from '@heroicons/react/solid'
 import { useSession } from 'next-auth/react'
 import { addDoc, collection, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { db } from '../../firebase'
+import Moment from 'react-moment'
 
 export default function Post({ id, username, profileImg, image, caption }) {
   const [comment, setComment] = useState('')
@@ -67,6 +68,24 @@ export default function Post({ id, username, profileImg, image, caption }) {
       <p className={styles.captionSection}>
         <span className={styles.usernameCaptionSection}>{username} </span> {caption}
       </p>
+
+      {comments.length > 0 && (
+        <div className="ml-10 h-20 overflow-y-scroll scrollbar-thumb-black scrollbar-thin">
+          {comments.map(comment => (
+            <div key={comment.id} className="flex items-center space-x-2 mb-3">
+              <img className="h-7 rounded-full" src={comment.data().userImage} alt="" />
+              <p className="text-sm flex-1">
+                <span className="font-bold">{comment.data().username}</span>{' '}
+                {comment.data().comment}
+              </p>
+
+              <Moment className="pr-5 text-xs" fromNow>
+                {comment.data().timestamp?.toDate()}
+              </Moment>
+            </div>
+          ))}
+        </div>
+      )}
 
       {session && (
         <form className={styles.commentSection}>

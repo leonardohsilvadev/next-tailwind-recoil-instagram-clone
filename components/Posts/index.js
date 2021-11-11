@@ -16,5 +16,19 @@ export default function Posts() {
 
   console.log('posts: ', posts)
 
-  return <div>{posts && posts.map(post => <Post key={post.id} post={post.data()} />)}</div>
+  return (
+    <div>
+      {posts &&
+        posts.map(post => (
+          <Post
+            key={post.id}
+            id={post.id}
+            username={post.data().username}
+            profileImg={post.data().profileImg}
+            image={post.data().image}
+            caption={post.data().caption}
+          />
+        ))}
+    </div>
+  )
 }

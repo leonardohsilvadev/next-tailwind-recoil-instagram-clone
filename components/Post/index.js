@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import {
   BookmarkIcon,
   ChatIcon,
@@ -8,9 +9,39 @@ import {
 } from '@heroicons/react/outline'
 import { HeartIcon as HeartIconFilled } from '@heroicons/react/solid'
 import { useSession } from 'next-auth/react'
+import { addDoc, collection, serverTimestamp, onSnapshot, query, orderBy } from 'firebase/firestore'
+import { db } from '../../firebase'
 
-export default function Post({ post: { id, username, profileImg, image, caption } }) {
+export default function Post({ id, username, profileImg, image, caption }) {
+  const [comment, setComment] = useState('')
+  const [comments, setComments] = useState([])
   const { data: session } = useSession()
+
+  const addComment = async e => {
+    e.preventDefault()
+
+    const commentToSend = comment
+    setComment('')
+
+    await addDoc(collection(db, 'posts', id, 'comments'), {
+      comment: commentToSend,
+      username: session.user.username,
+      userImage: session.user.image,
+      timestamp: serverTimestamp(),
+    })
+  }
+
+  useEffect(
+    () =>
+      onSnapshot(
+        query(collection(db, 'posts', id, 'comments'), orderBy('timestamp', 'desc')),
+        snapshot => setComments(snapshot.docs)
+      ),
+    [db]
+  )
+
+  console.log('comments: ', comments)
+
   return (
     <div className={styles.container}>
       <div className={styles.userInfoSection}>
@@ -40,8 +71,21 @@ export default function Post({ post: { id, username, profileImg, image, caption 
       {session && (
         <form className={styles.commentSection}>
           <EmojiHappyIcon className={styles.emojiIcon} />
-          <input type="text" placeholder="Add a comment..." className={styles.commentInput} />
-          <button className={styles.postBtn}>Post</button>
+          <input
+            className={styles.commentInput}
+            type="text"
+            placeholder="Add a comment..."
+            value={comment}
+            onChange={({ target: { value } }) => setComment(value)}
+          />
+          <button
+            className={styles.postBtn}
+            type="submit"
+            disabled={!comment.trim()}
+            onClick={addComment}
+          >
+            Post
+          </button>
         </form>
       )}
     </div>
